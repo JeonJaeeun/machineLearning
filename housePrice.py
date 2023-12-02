@@ -170,10 +170,10 @@ for train_index, val_index in kf.split(train_X):
     verbose_eval=20,)
     y_pred = model_xgb.predict(xgb_eval)
     tmp_rmse = np.sqrt(mean_squared_error(y_valid, y_pred))
-    print(tmp_rmse)
+    #print(tmp_rmse)
     models_xgb.append(model_xgb)
     rmses_xgb.append(tmp_rmse)
     oof_xgb[val_index] = y_pred
 
-sum(rmses_xgb)/len(rmses_xgb)
-
+avg_rmse = sum(rmses_xgb) / len(rmses_xgb)
+print("평균 RMSE:", avg_rmse)
