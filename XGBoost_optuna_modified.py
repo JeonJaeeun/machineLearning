@@ -25,8 +25,6 @@ test_df=pd.read_csv('https://raw.githubusercontent.com/JeonJaeeun/machineLearnin
 
 all_df = pd.concat([train_df, test_df], sort=False).reset_index(drop=True)
 
-categories = all_df.columns[all_df.dtypes == "object"]
-
 train_df_le = all_df[~all_df["SalePrice"].isnull()]
 test_df_le = all_df[all_df["SalePrice"].isnull()]
 
@@ -35,8 +33,6 @@ kf = KFold(n_splits=folds)
 
 train_X = train_df_le.drop(["SalePrice", "Id"], axis=1)
 train_Y = train_df_le["SalePrice"]
-
-np.log(train_df['SalePrice'])
 
 pd.options.mode.chained_assignment = None
 train_df_le["SalePrice_log"] = np.log(train_df_le["SalePrice"])
