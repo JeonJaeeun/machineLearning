@@ -1,6 +1,7 @@
 from hyperopt import hp, tpe, fmin, Trials
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.metrics import r2_score
 plt.style.use("ggplot")
 import pandas as pd
 import numpy as np
@@ -22,16 +23,23 @@ from platform import python_version
 import lightgbm as lgb
 import xgboost as xgb
 
+import time
+
+# 데이터 불러오기
 train_df=pd.read_csv('https://raw.githubusercontent.com/JeonJaeeun/machineLearning/main/house-prices-advanced-regression-techniques/train.csv')
 test_df=pd.read_csv('https://raw.githubusercontent.com/JeonJaeeun/machineLearning/main/house-prices-advanced-regression-techniques/test.csv')
 
+# 데이터 병합
 all_df = pd.concat([train_df, test_df], sort=False).reset_index(drop=True)
 
+# categories 변수 추출
 categories = all_df.columns[all_df.dtypes == "object"]
 
+# SalePrice가 결측치가 아닌 데이터셋과 결측치인 데이터셋 분리
 train_df_le = all_df[~all_df["SalePrice"].isnull()]
 test_df_le = all_df[all_df["SalePrice"].isnull()]
 
+# KFold 객체 생성
 folds = 3
 kf = KFold(n_splits=folds)
 
@@ -124,37 +132,42 @@ for col in categories:
     test_X[col] = test_X[col].astype("int8")
 X_train, X_valid, y_train, y_valid = train_test_split(train_X, train_Y, test_size=0.2, random_state=1234, shuffle=False,  stratify=None)
 
-# Objective 함수 수정
+# 하이퍼파라미터 최적화를 위한 Objective 함수 정의
 def objective(params):
     xgb_params = {
         "learning_rate": 0.05,
         "seed": 1234,
         "max_depth": int(params['max_depth']),
         "colsample_bytree": params['colsample_bytree'],
-        "sublsample": params['sublsample'],  
+        "subsample": params['subsample'],  
     }
     
     rmses = []
     for train_index, val_index in kf.split(train_X):
+        # 데이터셋 분할
         X_train = train_X.iloc[train_index]
         X_valid = train_X.iloc[val_index]
         y_train = train_Y.iloc[train_index]
         y_valid = train_Y.iloc[val_index]
         
+        # XGBoost DMatrix 생성
         xgb_train = xgb.DMatrix(X_train, label=y_train)
         xgb_eval = xgb.DMatrix(X_valid, label=y_valid)
         evals = [(xgb_train, "train"), (xgb_eval, "eval")]
         
+        # 모델 학습
         model_xgb = xgb.train(xgb_params, xgb_train,
                               evals=evals,
                               num_boost_round=1000,
                               early_stopping_rounds=20,
                               verbose_eval=10)
         
+        # 예측값 생성 및 RMSE 계산
         y_pred = model_xgb.predict(xgb_eval)
         tmp_rmse = np.sqrt(mean_squared_error(y_valid, y_pred))
         rmses.append(tmp_rmse)
     
+    # 평균 RMSE 계산
     mean_rmse = np.mean(rmses)
     return mean_rmse
 
@@ -162,13 +175,13 @@ def objective(params):
 space = {
     'max_depth': hp.quniform('max_depth', 3, 16, 1),
     'colsample_bytree': hp.uniform('colsample_bytree', 0.2, 0.9),
-    'sublsample': hp.uniform('sublsample', 0.2, 0.9),
+    'subsample': hp.uniform('subsample', 0.2, 0.9),
 }
 
 # Trials 객체 생성
 trials = Trials()
 
-# 최적화 수행
+# hyperopt 라이브러리를 사용해서 최적화 수행
 best = fmin(fn=objective, space=space, algo=tpe.suggest, max_evals=10, trials=trials)
 
 # 최적의 하이퍼파라미터 확인
@@ -180,14 +193,16 @@ xgb_params = {
     "seed": 1234,
     "max_depth": int(best['max_depth']),
     "colsample_bytree": best['colsample_bytree'],
-    "sublsample": best['sublsample'],
+    "subsample": best['subsample'],
 }
 
 models_xgb = []
 rmses_xgb = []
 oof_xgb = np.zeros(len(train_X))
+training_times = []  # List to store training times
 
 for train_index, val_index in kf.split(train_X):
+    start_time = time.time()  # Record the start time
     X_train = train_X.iloc[train_index]
     X_valid = train_X.iloc[val_index]
     y_train = train_Y.iloc[train_index]
@@ -205,10 +220,22 @@ for train_index, val_index in kf.split(train_X):
     
     y_pred = model_xgb.predict(xgb_eval)
     tmp_rmse = np.sqrt(mean_squared_error(y_valid, y_pred))
-    #print(tmp_rmse)
     models_xgb.append(model_xgb)
     rmses_xgb.append(tmp_rmse)
     oof_xgb[val_index] = y_pred
+    
+    end_time = time.time()  # 학습 종료 시간 기록
+    training_time = end_time - start_time  # 학습 시간 계산
+    training_times.append(training_time)  # 학습 시간 리스트에 추가
 
+# 교차 검증 결과에 대한 평균 RMSE 계산
 avg_rmse = sum(rmses_xgb) / len(rmses_xgb)
 print("평균 RMSE:", avg_rmse)
+
+# R^2 계산
+r2 = r2_score(y_valid, y_pred)
+print("R^2:", r2)
+
+# 전체 모델이 평균 학습 시간 계산 및 출력
+avg_training_time = sum(training_times) / len(training_times)
+print("평균 학습 시간:", avg_training_time, "초")
