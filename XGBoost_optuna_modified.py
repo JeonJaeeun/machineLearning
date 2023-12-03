@@ -162,15 +162,18 @@ study = optuna.create_study(sampler=optuna.samplers.RandomSampler(seed=0))
 # Objective 함수를 최대 10번(trials) 실행하여 최적의 하이퍼파라미터 탐색
 study.optimize(objective, n_trials=10)
 # 가장 무수한 성능의 하이퍼파라미터 출력
-study.best_params
+#study.best_params
 
-# 사전에 찾은 최적의 하이퍼파라미터 설정
+# Optuna를 통해 찾은 최적의 하이퍼파라미터 설정
+best_params = study.best_params
+
+# Optuna에서 찾은 최적의 하이퍼파라미터로 설정
 xgb_params = {
-"learning_rate":0.05,
-"seed":1234,
-"max_depth": 6,
-"colsample_bytree": 0.330432640328732,
-"subsample": 0.7158427239902707
+    "learning_rate": 0.05,
+    "seed": 1234,
+    "max_depth": best_params["max_depth"],
+    "colsample_bytree": best_params["colsample_bytree"],
+    "subsample": best_params["subsample"]
 }
 
 models_xgb = []
