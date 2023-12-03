@@ -184,9 +184,6 @@ trials = Trials()
 # hyperopt 라이브러리를 사용해서 최적화 수행
 best = fmin(fn=objective, space=space, algo=tpe.suggest, max_evals=10, trials=trials)
 
-# 최적의 하이퍼파라미터 확인
-print("최적 하이퍼파라미터:", best)
-
 # 최적의 하이퍼파라미터로 모델 재학습 및 평가
 xgb_params = {
     "learning_rate": 0.05,
