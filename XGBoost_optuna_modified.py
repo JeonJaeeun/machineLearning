@@ -28,8 +28,6 @@ test_df=pd.read_csv('https://raw.githubusercontent.com/JeonJaeeun/machineLearnin
 
 all_df = pd.concat([train_df, test_df], sort=False).reset_index(drop=True)
 
-categories = all_df.columns[all_df.dtypes == "object"]
-
 train_df_le = all_df[~all_df["SalePrice"].isnull()]
 test_df_le = all_df[all_df["SalePrice"].isnull()]
 
@@ -218,3 +216,4 @@ print("R^2:", r2)
 # 전체 모델이 평균 학습 시간 계산 및
 avg_training_time = sum(training_times) / len(training_times)
 print("평균 학습 시간:", avg_training_time, "초")
+
