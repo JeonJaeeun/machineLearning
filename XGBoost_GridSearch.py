@@ -136,8 +136,8 @@ print("GridSearchCV를 통해 찾은 최적의 하이퍼파라미터: ", best_pa
 # 최적의 하이퍼파라미터를 적용하여 XGBoost 모델 재학습 및 예측
 best_xgb_model = XGBRegressor(learning_rate=0.05, seed=1234, **best_params)
 
-rmses = []
-r2s = []
+rmses_grid = []
+r2s_grid = []
 training_times = []
 
 # KFold를 통한 교차 검증 (K-Fold Cross Validation) 수행
@@ -155,12 +155,12 @@ for train_index, val_index in kf.split(train_X):
     tmp_rmse = np.sqrt(mean_squared_error(y_valid, y_pred))
     tmp_r2 = r2_score(y_valid, y_pred)
 
-    rmses.append(tmp_rmse)
-    r2s.append(tmp_r2)
+    rmses_grid.append(tmp_rmse)
+    r2s_grid.append(tmp_r2)
 
 # 교차 검증 결과에 대한 평균 RMSE, R^2 및 평균 학습 시간 계산 및 출력
-avg_rmse = sum(rmses) / len(rmses)
-avg_r2 = sum(r2s) / len(r2s)
+avg_rmse = sum(rmses_grid) / len(rmses_grid)
+avg_r2 = sum(r2s_grid) / len(r2s_grid)
 avg_training_time = sum(training_times) / len(training_times)
 
 print("평균 RMSE: ", avg_rmse)
