@@ -15,6 +15,13 @@ mean_r2 = {
     'Optuna': 0.9107415055603572
 }
 
+mean_training_time = {
+    'Grid Search': 0.2483541965419654846191,
+    'Random Search': 0.46881739298502606,
+    'Hyperopt': 0.9374728997548422,
+    'Optuna': 0.7641531626383463
+}
+
 # 각 최적화 방법의 성능을 고려한 종합 평가
 weights = {'RMSE': 0.5, 'R^2': 0.5}  # 가중치 설정
 combined_score = {}
@@ -29,9 +36,9 @@ best_method = max(combined_score, key=combined_score.get)
 best_score = combined_score[best_method]
 
 # 첫 번째 그래프: 각 최적화 방법의 평균 RMSE와 평균 R^2 비교
-plt.figure(figsize=(12, 6))
+plt.figure(figsize=(18, 6))
 
-plt.subplot(1, 2, 1)  # 첫 번째 subplot (평균 RMSE)
+plt.subplot(1, 3, 1)  # 첫 번째 subplot (평균 RMSE)
 plt.bar(mean_rmse.keys(), mean_rmse.values())
 plt.title('Comparison of Mean RMSE')
 plt.xlabel('Optimization Methods')
@@ -39,13 +46,21 @@ plt.ylabel('Mean RMSE')
 plt.ylim(0.1, 0.16)  # y축 범위 설정
 plt.yticks([0.1, 0.12, 0.14, 0.16])  # y축 눈금 설정
 
-plt.subplot(1, 2, 2)  # 두 번째 subplot (평균 R^2)
+plt.subplot(1, 3, 2)  # 두 번째 subplot (평균 R^2)
 plt.bar(mean_r2.keys(), mean_r2.values())
 plt.title('Comparison of Mean R^2')
 plt.xlabel('Optimization Methods')
 plt.ylabel('Mean R^2')
 plt.ylim(0.8, 1.0)  # y축 범위 설정
 plt.yticks([0.8, 0.85, 0.9, 0.95, 1.0])  # y축 눈금 설정
+
+plt.subplot(1, 3, 3)  # 세 번째 subplot (평균 학습 시간)
+plt.bar(mean_training_time.keys(), mean_training_time.values(), color='orange')
+plt.title('Comparison of Mean Training Time')
+plt.xlabel('Optimization Methods')
+plt.ylabel('Mean Training Time')
+plt.ylim(0.1, 1.0)  # y축 범위 설정
+plt.yticks([0.1, 0.3, 0.5, 0.7, 1.0])  # y축 눈금 설정
 
 plt.tight_layout()
 plt.show()
