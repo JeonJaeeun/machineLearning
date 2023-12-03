@@ -1,29 +1,17 @@
 from hyperopt import hp, tpe, fmin, Trials
+import numpy as np
+import optuna
+import pandas as pd
+import random
+from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.model_selection import KFold, train_test_split
+from sklearn.preprocessing import LabelEncoder
+import time
+import warnings
+
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import r2_score
-plt.style.use("ggplot")
-import pandas as pd
-import numpy as np
-import random
-np.random.seed(1234)
-random.seed(1234)
-import warnings
-warnings.filterwarnings("ignore")
-
-from sklearn.model_selection import train_test_split, KFold
-from sklearn.metrics import mean_squared_error
-
 import xgboost as xgb
-
-from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import mean_squared_error
-from platform import python_version
-
-import lightgbm as lgb
-import xgboost as xgb
-
-import time
 
 # 데이터 불러오기
 train_df=pd.read_csv('https://raw.githubusercontent.com/JeonJaeeun/machineLearning/main/house-prices-advanced-regression-techniques/train.csv')
@@ -225,14 +213,24 @@ for train_index, val_index in kf.split(train_X):
     training_time = end_time - start_time  # 학습 시간 계산
     training_times.append(training_time)  # 학습 시간 리스트에 추가
 
+# 최적의 하이퍼파라미터 출력
+print("Hyperopt를 통해 찾은 최적의 하이퍼파라미터 :", best)
+
 # 교차 검증 결과에 대한 평균 RMSE 계산
 avg_rmse = sum(rmses_xgb) / len(rmses_xgb)
-print("평균 RMSE:", avg_rmse)
+print("평균 RMSE: ", avg_rmse)
 
 # R^2 계산
-r2 = r2_score(y_valid, y_pred)
-print("R^2:", r2)
+r2_scores = []
+for model in models_xgb:
+    y_pred = model.predict(xgb.DMatrix(X_valid))
+    r2 = r2_score(y_valid, y_pred)
+    r2_scores.append(r2)
+
+# 평균 R^2 계산
+avg_r2 = np.mean(r2_scores)
+print("평균 R^2: ", avg_r2)
 
 # 전체 모델이 평균 학습 시간 계산 및 출력
 avg_training_time = sum(training_times) / len(training_times)
-print("평균 학습 시간:", avg_training_time, "초")
+print("평균 학습 시간: ", avg_training_time, "초")
